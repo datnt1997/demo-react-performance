@@ -1,4 +1,11 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  lazy,
+  Suspense,
+} from "react";
 import "./App.css";
 import useComponentSize from "@rehooks/component-size";
 import cardData from "./data.json";
@@ -6,7 +13,10 @@ import uuid from "uuid";
 import { Card } from "./Card";
 import { AddButton } from "./AddButton";
 import { Summary } from "./Summary";
-import { AddModal } from "./AddModal";
+
+const AddModal = lazy(() => import("./AddModal"));
+
+const ModalLoader = () => <div className="Modal-Loader">Loading</div>;
 
 function positionCards(cards, width, height) {
   Object.values(cards).forEach(
@@ -21,8 +31,17 @@ function positionCards(cards, width, height) {
 function parseData() {
   const cards = {};
 
-  cardData.forEach((task) => {
+  cardData.forEach(task => {
     cards[task.id] = task;
+
+    for (let i = 0; i < 50; i++) {
+      const clonedCard = {
+        ...task,
+        id: uuid.v4(),
+        label: `${task.label}-(${i})`
+      };
+      cards[clonedCard.id] = clonedCard;
+    }
   });
 
   return cards;
@@ -59,8 +78,10 @@ function App() {
   }, [height, width]);
 
   function handleDelete(card) {
-    delete cards[card.id];
-    setCards({ ...cards });
+    const clonedCards = { ...cards };
+    delete clonedCards[card.id];
+
+    setCards(clonedCards);
   }
 
   const cardEls = Object.values(cards).map((card) => (
@@ -85,27 +106,35 @@ function App() {
 
         const { card, dragOffset } = dragCardInfo;
 
-        card.position = {
-          top: ev.pageY - dragOffset.y,
-          left: ev.pageX - dragOffset.x,
+        const updatedCards = {
+          ...cards,
+          [card.id]: {
+            ...card,
+            position: {
+              top: ev.pageY - dragOffset.y,
+              left: ev.pageX - dragOffset.x,
+            },
+          },
         };
 
-        setCards({ ...cards });
+        setCards(updatedCards);
       }}
     >
       {cardEls}
       <Summary cards={cards} />
       <AddButton onClick={showDialog} />
       {isAddOpen && (
-        <AddModal
-          isOpen={isAddOpen}
-          onClose={() => setIsAddOpen(false)}
-          onAdd={(cardText) => {
-            addCard(cards, cardText);
-            positionCards(cards, width, height);
-            setCards(cards);
-          }}
-        />
+        <Suspense fallback={<ModalLoader />}>
+          <AddModal
+            isOpen={isAddOpen}
+            onClose={() => setIsAddOpen(false)}
+            onAdd={(cardText) => {
+              addCard(cards, cardText);
+              positionCards(cards, width, height);
+              setCards({ ...cards });
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );

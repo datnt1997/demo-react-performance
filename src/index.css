@@ -11,3 +11,42 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.arrow {
+  width: 0;
+  height: 0;
+  position: absolute;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 20px solid black;
+
+  cursor: pointer;
+}
+
+.arrow-top-right {
+  transform: rotate(45deg);
+  top: -6px;
+  right: -16px;
+}
+
+.arrow-top-left {
+  transform: rotate(-45deg);
+  top: -6px;
+  left: -16px;
+}
+
+.arrow-bottom-left {
+  transform: rotate(225deg);
+  bottom: -6px;
+  left: -16px;
+}
+
+.arrow-bottom-right {
+  transform: rotate(135deg);
+  bottom: -6px;
+  right: -16px;
+}
+
+.arrow-active {
+  display: none;
+}
